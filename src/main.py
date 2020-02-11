@@ -29,12 +29,10 @@ async def on_ready():
 async def auth(ctx, code):
     UserName = ctx.message.author.name
     UserID = ctx.message.author.id 
-    print(UserName, UserID)
     if 'authenticated' in ctx.message.author.roles:
         ctx.send("Already authenticated! Have a good time~!")
     else:
         now = datetime.datetime.now()
-        print(now)
         sql = "select * from {} where auth_code={} and {} < expire_date and permission = {}".format(ServerEnv['auth_table'], code, now, str(0))
         MysqlCursor.execute(sql)
         if MysqlCursor.rowcount == 0:
