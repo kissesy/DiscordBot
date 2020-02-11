@@ -1,5 +1,4 @@
 ###### 
-Description
 lien server auth discord bot 
 ======
 
