@@ -23,7 +23,7 @@ def GetServerEnv():
 ServerEnv = GetServerEnv()
 
 try:
-    MysqlConnect = pymysql.connect(ServerEnv['host'], ServerEnv['username'], ServerEnv['password'], ServerEnv['dbname'], charset='utf8')
+    MysqlConnect = pymysql.connect(ServerEnv['host'], ServerEnv['username'], ServerEnv['password'], ServerEnv['dbname'], charset='utf8', autocommit=True)
     MysqlCursor = MysqlConnect.cursor(pymysql.cursors.DictCursor)
 except pymysql.InternalError as err:
     logging.warning("[{}]MySql Server Error".format(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
@@ -100,7 +100,7 @@ async def auth(ctx, code):
     if not(JudgeAuth(ctx, 'Authenticated')):
         print("test")
         now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        SearchUserCodeSql = "select * from {} where auth_code={} and {} < expire_date and permission=0".format(ServerEnv['auth_table'], code, now)
+        SearchUserCodeSql = "select * from {} where auth_code={} and '{}' < expire_date and permission=0".format(ServerEnv['auth_table'], code, now)
         print(SearchUserCodeSql)
         #SearchUserCodeSql = "select * from {} where auth_code={}".format(ServerEnv['auth_table'], code)
         ThrowQuery(SearchUserCodeSql)

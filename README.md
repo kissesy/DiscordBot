@@ -10,7 +10,7 @@ TODO
 - [X] logging server log and check error case 
 - [X] Test and Debugging
 - [X] Make Welcome message for user 
-- [ ] Fix Mysql Error Update Sql Query and Possiable change discord display name  
+- [X] Fix Mysql Error Update Sql Query and Possiable change discord display name  
 ------
  
 
