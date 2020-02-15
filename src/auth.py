@@ -68,11 +68,13 @@ def JudgeAuth(ctx, RoleName):
     else:
         return False
 
+
 def ThrowQuery(sql):
     try:
         MysqlCursor.execute(sql)
     except pymysql.InternalError as err:
-        print("ThrowQuery Error")
+        logging.info("[{}]sql query fail...!".format(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+
 
 async def SetRole(ctx):
     Addrole = get(ctx.message.author.guild.roles, id=ServerEnv['Auth_Role'])
@@ -87,40 +89,44 @@ async def SetRole(ctx):
     else:
         return False
 
+
 async def SetName(ctx, MinecraftName):
-    await ctx.author.edit(username=MinecraftName) #change nickname
-    logging.info("[{}]Change User name from {} to {}".format(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), ctx.message.author.display_name, MinecraftName))
-    print("Set Name")
+    try:
+        await ctx.author.edit(username=MinecraftName) #change nickname
+        logging.info("[{}]Change User name from {} to {}".format(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), ctx.message.author.display_name, MinecraftName))
+    except discord.Forbidden:
+        await ctx.send("Don't Have manage nickname permission...!")
+
 
 @AuthBot.command()
 async def auth(ctx, code):
+    if ctx.message.author.bot:
+        return None 
+
+    await ctx.message.delete()
     logging.info("[{}]{} tried /auth {}".format(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), ctx.message.author, code))
     UserName = ctx.message.author.name
     UserID = ctx.message.author.id
+
     if not(JudgeAuth(ctx, 'Authenticated')):
-        print("test")
         now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         SearchUserCodeSql = "select * from {} where auth_code={} and '{}' < expire_date and permission=0".format(ServerEnv['auth_table'], code, now)
-        print(SearchUserCodeSql)
-        #SearchUserCodeSql = "select * from {} where auth_code={}".format(ServerEnv['auth_table'], code)
         ThrowQuery(SearchUserCodeSql)
+        
         if MysqlCursor.rowcount == 0:
             await ctx.send("Hey {}! isn't exist verificate auth code or was expired your code! plz auth in game again!".format(UserName))
             logging.info("[{}]{} tried auth but verificated auth code or was expired code!".format(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), UserName))
         else:
             row = MysqlCursor.fetchone()
             UpdateUserSql = 'update {} set permission = 1 where turn = {}'.format(ServerEnv['auth_table'], row['turn'])
-            print(UpdateUserSql)
             ThrowQuery(UpdateUserSql)
             MinecraftName = GetUserName(row['uuid'])
             await SetName(ctx, MinecraftName)
-            if not(await SetRole(ctx)):
-                print("Set Role Error")
-            else:
-                print("SEt Role!")
+            await SetRole(ctx)
     else:
         await ctx.send("Hey {}! Already Authenticated! Have a good time~!".format(UserName))
         logging.info("[{}]{}! Already Authenticated!".format(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")), UserName)
+
 
 if __name__ == "__main__":
     ServerEnv = GetServerEnv()
